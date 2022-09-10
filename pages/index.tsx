@@ -104,7 +104,6 @@ const Home: NextPage = () => {
       <Navbar />
 
       <Container>
-        <ContractForm />
         <Button color="gradient" onClick={change}>
           Call!
         </Button>

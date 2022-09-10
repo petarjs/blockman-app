@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 import { useEffect } from "react";
 import Navbar from "../../../components/Navbar/Navbar";
 import useNearContext from "../../../context/NearContext";
+import useAuth from "../../../hooks/useAuth";
 import useContract from "../../../hooks/useContract";
 import useContractQuery from "../../../queries/useContrcatQuery";
 import http from "../../../services/http";
@@ -20,7 +21,6 @@ const ContractForm = dynamic(
 const Home: NextPage = () => {
   const { query } = useRouter();
   const { setNetwork } = useNearContext();
-
   const { owner, contractName } = query;
 
   const { data: contractData, isLoading } = useContractQuery(
@@ -36,6 +36,8 @@ const Home: NextPage = () => {
 
     setNetwork(contractData.network);
   }, [contractData?.network]);
+
+  
 
   return (
     <div>

@@ -8,6 +8,10 @@ export default async function handler(
 ) {
   try {
     const { path } = req.body;
+
+    if (!path) {
+      return res.status(400).json({ error: "Path cannot be empty" });
+    }
     const data = await ipfs.get(path);
 
     res.status(200).json(data);

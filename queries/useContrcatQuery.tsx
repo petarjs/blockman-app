@@ -2,27 +2,29 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
 import useNearContext from "../context/NearContext";
 import useContract from "../hooks/useContract";
+import useMainContract from "../hooks/useMainContract";
 import { Contract } from "../interfaces/Contract";
 
 export default function useContractQuery(owner: string, contractName: string) {
   const { near } = useNearContext();
-  const methods = useMemo(() => {
-    return [
-      {
-        name: "getContract",
-        type: "view" as const,
-      },
-      {
-        name: "createContract",
-        type: "change" as const,
-      },
-      {
-        name: "updateContractJson",
-        type: "change" as const,
-      },
-    ];
-  }, []);
-  const { contract } = useContract("dev-1660931771342-13140308559008", methods);
+  const { contract } = useMainContract();
+  // const methods = useMemo(() => {
+  //   return [
+  //     {
+  //       name: "getContract",
+  //       type: "view" as const,
+  //     },
+  //     {
+  //       name: "createContract",
+  //       type: "change" as const,
+  //     },
+  //     {
+  //       name: "updateContractJson",
+  //       type: "change" as const,
+  //     },
+  //   ];
+  // }, []);
+  // const { contract } = useContract("dev-1660931771342-13140308559008", methods);
 
   // useEffect(() => {
   //   if (!contract) {

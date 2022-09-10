@@ -7,6 +7,10 @@ export default async function handler(
   res: NextApiResponse
 ) {
   try {
+    if (!req.body) {
+      res.status(400).json({ error: "Body cannot be empty" });
+    }
+
     const data = await ipfs.save({
       content: Buffer.from(JSON.stringify(req.body)),
     });

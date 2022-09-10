@@ -1,34 +1,19 @@
-import { Suspense, useState } from "react";
 import {
-  createStyles,
-  Container,
-  Avatar,
-  UnstyledButton,
-  Group,
-  Text,
-  Menu,
-  Tabs,
+  Anchor,
+  Breadcrumbs,
   Burger,
-  ActionIcon,
-  Center,
-  Badge,
-  Loader,
   Button,
+  Container,
+  createStyles,
+  Group,
+  Tabs,
+  Text,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  IconLogout,
-  IconHeart,
-  IconStar,
-  IconMessage,
-  IconSettings,
-  IconPlayerPause,
-  IconTrash,
-  IconSwitchHorizontal,
-  IconChevronDown,
-  IconPlus,
-} from "@tabler/icons";
+import { IconPlus } from "@tabler/icons";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/router";
+import { Suspense } from "react";
 import { NetworkSelect } from "./NetworkSelect";
 
 const UserDropdown = dynamic(() => import("./UserDropdown"), {
@@ -93,15 +78,13 @@ const useStyles = createStyles((theme) => ({
 
 export default function Navbar() {
   const { classes, theme, cx } = useStyles();
+  const { push, pathname } = useRouter();
   const [opened, { toggle }] = useDisclosure(false);
+  const {
+    query: { owner, contractName },
+  } = useRouter();
 
-  const tabs = ["tab 1", "tab 2"];
-
-  const items = tabs.map((tab) => (
-    <Tabs.Tab value={tab} key={tab}>
-      {tab}
-    </Tabs.Tab>
-  ));
+  const isNewContractPage = pathname === "/contract/new";
 
   return (
     <div className={classes.header}>
@@ -125,26 +108,30 @@ export default function Navbar() {
           </Suspense>
         </Group>
       </Container>
-      {/* <Container>
-        <Tabs
-          defaultValue="Home"
-          variant="outline"
-          classNames={{
-            root: classes.tabs,
-            tabsList: classes.tabsList,
-            tab: classes.tab,
-          }}
-        >
-          <Group>
-            <Tabs.List>{items}</Tabs.List>
-            <Center>
-              <ActionIcon color="violet" variant="filled" size="sm">
-                <IconPlus />
-              </ActionIcon>
-            </Center>
-          </Group>
-        </Tabs>
-      </Container> */}
+      <Container pb="sm">
+        <Group position="apart">
+          {!!owner && (
+            <Breadcrumbs>
+              <Anchor href={`/${owner}`}>{owner}</Anchor>
+              {!!contractName && (
+                <Anchor href={`/${owner}/${contractName}`}>
+                  {contractName}
+                </Anchor>
+              )}
+            </Breadcrumbs>
+          )}
+
+          {!isNewContractPage && (
+            <Button
+              size="xs"
+              leftIcon={<IconPlus size={14} />}
+              onClick={() => push("/contract/new")}
+            >
+              New Contract
+            </Button>
+          )}
+        </Group>
+      </Container>
     </div>
   );
 }

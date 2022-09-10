@@ -1,4 +1,6 @@
 import {
+  ActionIcon,
+  Badge,
   Button,
   Container,
   Grid,
@@ -7,10 +9,23 @@ import {
   Select,
   Stack,
   Text,
+  Title,
+  Tooltip,
 } from "@mantine/core";
-import { IconBrandTwitter, IconRocket } from "@tabler/icons";
+import {
+  IconBrandTwitter,
+  IconExternalLink,
+  IconLink,
+  IconRocket,
+} from "@tabler/icons";
+import { utils } from "near-api-js";
+import Link from "next/link";
+import { useRouter } from "next/router";
 import { forwardRef, useCallback, useEffect, useMemo, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
+import { getNearConfig, NEAR_ENV } from "../../config/near";
+import useNearContext from "../../context/NearContext";
+import useAuth from "../../hooks/useAuth";
 import useContract from "../../hooks/useContract";
 import {
   Contract,
@@ -18,10 +33,13 @@ import {
   ContractMethod,
   ContractMethodParameter,
 } from "../../interfaces/Contract";
+import useContractCallMutation from "../../queries/useContractCallMutation";
 import useIpfsMutation from "../../queries/useIpfsMutation";
 import useIpfsQuery from "../../queries/useIpfsQuery";
 import { useContractStore } from "../../stores/contractStore";
+import ContractHeader from "../Contract/ContractHeader";
 import ContractMethodForm from "./ContractMethodForm";
+import ContractMethodResponse from "./ContractMethodResponse";
 
 interface ContractMethodSelectItemProps {
   name: string;
@@ -50,6 +68,10 @@ interface Props {
   contract: Contract;
 }
 export default function ContractForm({ contract }: Props) {
+  const { accountId } = useAuth();
+  const { query, push } = useRouter();
+  const { owner, contractName } = query;
+
   const [selectedMethod, setSelectedMethod] = useState<ContractMethod>();
   const form = useForm();
 
@@ -60,6 +82,9 @@ export default function ContractForm({ contract }: Props) {
     contract.name,
     contractJson?.methods
   );
+
+  const { mutate: mutateContractCall, data: contractCallResponse } =
+    useContractCallMutation(userContract);
 
   useEffect(() => {
     // mutate({
@@ -123,12 +148,60 @@ export default function ContractForm({ contract }: Props) {
     const params =
       selectedMethod.type === "change" ? { args: data.data } : data.data;
 
-    const a = await (userContract as any)[selectedMethod.name]?.(params);
-    console.log({ a });
+    if (selectedMethod.type === "change") {
+      const gasUnit = data.meta.gasUnit;
+      const attachedDepositUnit = data.meta.attachedDepositUnit;
+      const gas = data.meta.gas;
+      const attachedDeposit = data.meta.attachedDeposit;
+      const calculatedGas =
+        gasUnit === "NEAR" ? utils.format.parseNearAmount(gas) : gas;
+      const calculatedAttachedDeposit =
+        attachedDepositUnit === "NEAR"
+          ? utils.format.parseNearAmount(attachedDeposit)
+          : attachedDeposit;
+      // const response = await (userContract as any)[selectedMethod.name]?.(
+      //   params,
+      //   calculatedGas,
+      //   calculatedAttachedDeposit
+      // );
+      // console.log({ response });
+
+      mutateContractCall({
+        type: selectedMethod.type,
+        method: selectedMethod.name,
+        params,
+        gas: calculatedGas,
+        deposit: calculatedAttachedDeposit,
+      } as any);
+    } else {
+      // const response = await (userContract as any)[selectedMethod.name]?.(
+      //   params
+      //   );
+      //   console.log({ response });
+
+      mutateContractCall({
+        type: selectedMethod.type,
+        method: selectedMethod.name,
+        params,
+      } as any);
+    }
   }
+
+  const isOwner = accountId === owner;
 
   return (
     <Stack>
+      <Group>
+        <ContractHeader contract={contract} />
+        {isOwner && (
+          <Group>
+            <Button onClick={() => push(`/${owner}/${contractName}/edit`)}>
+              Edit
+            </Button>
+          </Group>
+        )}
+      </Group>
+
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <Group position="apart" grow>
           <Container size="sm" ml={0} p={0} sx={{ maxWidth: "70%" }}>
@@ -185,6 +258,12 @@ export default function ContractForm({ contract }: Props) {
         <Group mt="md">
           {!!selectedMethod && (
             <ContractMethodForm method={selectedMethod} form={form} />
+          )}
+        </Group>
+
+        <Group mt="md">
+          {!!selectedMethod && !!contractCallResponse && (
+            <ContractMethodResponse response={contractCallResponse} />
           )}
         </Group>
       </form>

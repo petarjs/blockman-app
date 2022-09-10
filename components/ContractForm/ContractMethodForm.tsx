@@ -3,6 +3,7 @@ import {
   Code,
   Group,
   Input,
+  SegmentedControl,
   Stack,
   Table,
   Tabs,
@@ -21,25 +22,8 @@ interface Props {
 }
 
 export default function ContractMethodForm({ method, form }: Props) {
-  const attachedDepositParameter = {
-    name: "attachedDeposit",
-    type: "number",
-    description: "Attach NEAR with your contract call",
-  };
-
-  const gasParameter = {
-    name: "gas",
-    type: "number",
-    description: "Attach gas with your contract call (in yocto NEAR)",
-  };
-
-  const metaParameters =
-    method.type === "change"
-      ? [attachedDepositParameter, gasParameter]
-      : [gasParameter];
-
   return (
-    <Stack>
+    <Stack sx={{ width: "100%" }}>
       <Stack>
         <Group spacing="sm" align="center">
           <Title size="h1">{method.name}</Title>
@@ -51,24 +35,16 @@ export default function ContractMethodForm({ method, form }: Props) {
           {method.description}
         </Text>
       </Stack>
-      <Tabs
-        defaultValue="Data"
-        variant="outline"
-        classNames={
-          {
-            // root: classes.tabs,
-            // tabsList: classes.tabsList,
-            // tab: classes.tab,
-          }
-        }
-      >
+      <Tabs defaultValue="Data" variant="outline">
         <Tabs.List>
           <Tabs.Tab value="Data" key="Data">
             Data
           </Tabs.Tab>
-          <Tabs.Tab value="Meta" key="Meta">
-            Meta
-          </Tabs.Tab>
+          {method.type === "change" && (
+            <Tabs.Tab value="Meta" key="Meta">
+              Meta
+            </Tabs.Tab>
+          )}
         </Tabs.List>
         <Tabs.Panel value="Data">
           <Table>
@@ -108,40 +84,112 @@ export default function ContractMethodForm({ method, form }: Props) {
           </Table>
         </Tabs.Panel>
 
-        <Tabs.Panel value="Meta">
-          <Table>
-            <thead>
-              <tr>
-                <th>Parameter</th>
-                <th>Value</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              {metaParameters.map((metaParameter, index) => (
-                <tr key={index}>
+        {method.type === "change" && (
+          <Tabs.Panel value="Meta">
+            <Table>
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Value</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
                   <td>
-                    <Code>{metaParameter.name}</Code>
+                    <Code>gas</Code>
                   </td>
                   <td>
                     <Group>
-                      <Badge>{metaParameter.type}</Badge>
+                      <Badge>number</Badge>
                       <Controller
                         defaultValue={""}
                         control={form.control}
-                        name={`meta.${metaParameter.name}`}
+                        name={`meta.gas`}
                         render={({ field }) => (
-                          <Input {...field} placeholder={metaParameter.name} />
+                          <Input
+                            {...field}
+                            placeholder="gas"
+                            rightSectionWidth={135}
+                            rightSection={
+                              <Controller
+                                defaultValue={"NEAR"}
+                                control={form.control}
+                                name={`meta.gasUnit`}
+                                render={({ field }) => (
+                                  <SegmentedControl
+                                    {...field}
+                                    size="xs"
+                                    transitionDuration={200}
+                                    transitionTimingFunction="linear"
+                                    data={[
+                                      { label: "NEAR", value: "NEAR" },
+                                      {
+                                        label: "yoctoNEAR",
+                                        value: "yoctoNEAR",
+                                      },
+                                    ]}
+                                  />
+                                )}
+                              />
+                            }
+                          />
                         )}
                       />
                     </Group>
                   </td>
-                  <td>{metaParameter.description}</td>
+                  <td>Attach gas with your contract call</td>
                 </tr>
-              ))}
-            </tbody>
-          </Table>
-        </Tabs.Panel>
+
+                <tr>
+                  <td>
+                    <Code>attachedDeposit</Code>
+                  </td>
+                  <td>
+                    <Group>
+                      <Badge>number</Badge>
+                      <Controller
+                        defaultValue={""}
+                        control={form.control}
+                        name={`meta.attachedDeposit`}
+                        render={({ field }) => (
+                          <Input
+                            {...field}
+                            placeholder="attachedDeposit"
+                            rightSectionWidth={135}
+                            rightSection={
+                              <Controller
+                                defaultValue={"NEAR"}
+                                control={form.control}
+                                name={`meta.attachedDepositUnit`}
+                                render={({ field }) => (
+                                  <SegmentedControl
+                                    {...field}
+                                    size="xs"
+                                    transitionDuration={200}
+                                    transitionTimingFunction="linear"
+                                    data={[
+                                      { label: "NEAR", value: "NEAR" },
+                                      {
+                                        label: "yoctoNEAR",
+                                        value: "yoctoNEAR",
+                                      },
+                                    ]}
+                                  />
+                                )}
+                              />
+                            }
+                          />
+                        )}
+                      />
+                    </Group>
+                  </td>
+                  <td>Attach NEAR with your contract call</td>
+                </tr>
+              </tbody>
+            </Table>
+          </Tabs.Panel>
+        )}
       </Tabs>
     </Stack>
   );
